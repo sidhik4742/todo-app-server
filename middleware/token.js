@@ -7,12 +7,16 @@ function Token(req, res, next) {
     modalData.data.userName === req.body.userName &&
     modalData.data.password === req.body.password
   ) {
-      modalData.data.Token = req.body.Token;
+    modalData.data.Token = req.body.Token;
     console.log("user logged");
     next();
     return true;
   }
   res.send("login failed");
 }
+function Validation(req, res, next) {
+  console.log("validation middleware");
+  next();
+}
 
-module.exports = Token;
+module.exports = {Token,Validation};
