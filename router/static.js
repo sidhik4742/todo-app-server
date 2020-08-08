@@ -10,6 +10,7 @@ const middleware = require("../middleware/token");
 const modalData = require("../index");
 const { json } = require("body-parser");
 
+//////////////////////////////////////////Api for registration////////////////////////////////////
 router.post("/register", middleware.Validation, (req, res) => {
   let userRegisterDetails = req.body;
   //   console.log(req.body);
