@@ -17,14 +17,16 @@ const insertDocument = (userRegisterDetails) => {
 
     dbName
       .collection("registerDetails")
-      .insertOne({}, { $set: userRegisterDetails }, (error, collection) => {
+      .insertOne(userRegisterDetails, (error, collection) => {
         if (error) {
           console.log(error);
-        } else {
-          console.log(collection);
         }
+        
+        let flag_id = collection.ops[0]._id;
+        console.log(collection.ops[0]._id);
+        return flag_id;
       });
-    console.log(userRegisterDetails);
+    // console.log(userRegisterDetails);
   });
 };
 
