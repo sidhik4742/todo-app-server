@@ -8,6 +8,7 @@ const url = "mongodb://localhost:27017";
 
 const middleware = require("../middleware/token");
 const modalData = require("../index");
+const { json } = require("body-parser");
 
 router.post("/register", middleware.Validation, (req, res) => {
   let userRegisterDetails = req.body;
@@ -19,31 +20,31 @@ router.post("/register", middleware.Validation, (req, res) => {
     }
     console.log("Connected successfully to server");
     const dbName = db.db("customerDetails");
+    var query = { emailOrPhone: userRegisterDetails.emailOrPhone };
     dbName
       .collection("registerDetails")
-      .find(
-        { emailOrPhone: userRegisterDetails.emailOrPhone },
-        (error, collection) => {
-          if (collection) {
-            res.send("email or phone already registered");
-            console.log("email or phone already registered" + collection);
-            db.close();
-          } else {
-            dbName
-              .collection("registerDetails")
-              .insertOne(userRegisterDetails, (error, collection) => {
-                if (error) {
-                  console.error(error);
-                  res.send("registration failed please try again" + error);
-                } else {
-                  console.log(collection.result);
-                  res.send("successfully registered");
-                }
-                db.close();
-              });
-          }
+      .find(query)
+      .toArray((error, collection) => {
+        console.log(collection);
+        if (collection.length !== 0) {
+          res.send("email or phone already registered");
+          console.log("email or phone already registered");
+          db.close();
+        } else {
+          dbName
+            .collection("registerDetails")
+            .insertOne(userRegisterDetails, (error, collection) => {
+              if (error) {
+                console.error(error);
+                res.send("registration failed please try again" + error);
+              } else {
+                console.log(collection.result);
+                res.send("successfully registered");
+              }
+              db.close();
+            });
         }
-      );
+      });
   });
 });
 router.post("/login", middleware.Token, (req, res) => {
