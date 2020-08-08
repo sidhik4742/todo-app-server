@@ -3,7 +3,6 @@ const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
-
 const port = process.env.PORT || 3001;
 
 const Token = require("./middleware/token");

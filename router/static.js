@@ -1,17 +1,50 @@
 const express = require("express");
 const router = express.Router();
+const MongoClient = require("mongodb").MongoClient;
+const assert = require("assert");
+
+// Connection URL
+const url = "mongodb://localhost:27017";
 
 const middleware = require("../middleware/token");
 const modalData = require("../index");
-const dbMethods = require("../data/db");
-
-// let middlewareparam = [Token];
 
 router.post("/register", middleware.Validation, (req, res) => {
-//   console.log(req.body);
+  let userRegisterDetails = req.body;
+  //   console.log(req.body);
   //   console.log(`user register details ${req.body}`);
-  dbMethods.insertDocument(req.body);
-  res.json(req.body);
+  MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
+    if (error) {
+      throw error;
+    }
+    console.log("Connected successfully to server");
+    const dbName = db.db("customerDetails");
+    dbName
+      .collection("registerDetails")
+      .find(
+        { emailOrPhone: userRegisterDetails.emailOrPhone },
+        (error, collection) => {
+          if (collection) {
+            res.send("email or phone already registered");
+            console.log("email or phone already registered" + collection);
+            db.close();
+          } else {
+            dbName
+              .collection("registerDetails")
+              .insertOne(userRegisterDetails, (error, collection) => {
+                if (error) {
+                  console.error(error);
+                  res.send("registration failed please try again" + error);
+                } else {
+                  console.log(collection.result);
+                  res.send("successfully registered");
+                }
+                db.close();
+              });
+          }
+        }
+      );
+  });
 });
 router.post("/login", middleware.Token, (req, res) => {
   console.log("login form data");
