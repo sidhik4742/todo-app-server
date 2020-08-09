@@ -1,22 +1,22 @@
-const modalData = require("../index");
+const MongoClient = require("mongodb").MongoClient;
+const assert = require("assert");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
-function Token(req, res, next) {
+// Mngo DB Connection URL
+const url = "mongodb://localhost:27017";
+
+function authentication(req, res, next) {
   console.log("creating token");
-  console.log(modalData.data);
-  if (
-    modalData.data.userName === req.body.userName &&
-    modalData.data.password === req.body.password
-  ) {
-    modalData.data.Token = req.body.Token;
-    console.log("user logged");
-    next();
-    return true;
-  }
-  res.send("login failed");
+  
+  console.log("user logged");
+  // next();
+  // return true;
 }
-function Validation(req, res, next) {
+
+function validation(req, res, next) {
   console.log("validation middleware");
   next();
 }
 
-module.exports = {Token,Validation};
+module.exports = { authentication, validation };
