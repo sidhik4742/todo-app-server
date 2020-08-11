@@ -14,6 +14,7 @@ const saltRounds = 10;
 
 //////////////////////////////////////////Api for registration////////////////////////////////////
 router.post("/register", middleware.validation, (req, res) => {
+
   const encryptedPassword = bcrypt.hashSync(req.body.password, saltRounds);
   let userName = req.body.userName;
   let emailOrPhone = req.body.emailOrPhone;
