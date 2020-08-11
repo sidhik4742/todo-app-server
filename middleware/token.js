@@ -8,11 +8,11 @@ const url = "mongodb://localhost:27017";
 
 function authentication(req, res, next) {
   console.log("creating token");
-  let userName = req.body.userName;
-  let password = req.body.password;
+  // let userName = req.body.userName;
+  // let password = req.body.password;
    
   console.log("user logged");
-  // next();
+  next();
   // return true;
 }
 

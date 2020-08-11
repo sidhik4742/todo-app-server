@@ -14,7 +14,6 @@ const saltRounds = 10;
 
 //////////////////////////////////////////Api for registration////////////////////////////////////
 router.post("/register", middleware.validation, (req, res) => {
-
   const encryptedPassword = bcrypt.hashSync(req.body.password, saltRounds);
   let userName = req.body.userName;
   let emailOrPhone = req.body.emailOrPhone;
@@ -77,7 +76,8 @@ router.post("/login", middleware.authentication, (req, res) => {
   let password = req.body.password;
   MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
     if (error) {
-      throw error;
+      res.sendStatus(500).send("Server error")
+      db.close();
     }
     console.log("Connected successfully to server");
     const dbName = db.db("customerDetails");
@@ -87,16 +87,18 @@ router.post("/login", middleware.authentication, (req, res) => {
       .find(query)
       .toArray()
       .then((collection) => {
-        console.log(collection);
+        // console.log(collection);
         if (collection.length === 0) {
-          res.send(`User not registered`);
+          res.sendStatus(200).send(`User not registered Please sign up first`);
         } else {
-          collection.forEach((user, index) => {
-            // console.log(bcrypt.compareSync(password, user.Password));
-            if (bcrypt.compareSync(password, user.Password)) {
-              
+          collection.forEach((element) => {
+            if (bcrypt.compareSync(password, element.Password)) {
+              res.sendStatus(200).json(element.Items);
+              console.log(element.Items);
+              break
             }
           });
+          db.close(); 
         }
       });
   });
