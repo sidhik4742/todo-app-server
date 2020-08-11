@@ -3,7 +3,6 @@ const assert = require("assert");
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-// const moduleFun = require("../module");
 
 const middleware = require("../middleware/token");
 const { json } = require("body-parser");
@@ -15,12 +14,6 @@ const saltRounds = 10;
 
 //////////////////////////////////////////Api for registration////////////////////////////////////
 router.post("/register", middleware.validation, (req, res) => {
-  // let userDetails = req.body;
-  // let status = moduleFun.registerNewUser(userDetails);
-  // console.log(status);
-  // res.send(status.message);
-  //   console.log(req.body);
-
   const encryptedPassword = bcrypt.hashSync(req.body.password, saltRounds);
   let userName = req.body.userName;
   let emailOrPhone = req.body.emailOrPhone;
@@ -91,7 +84,8 @@ router.post("/login", middleware.authentication, (req, res) => {
     dbName
       .collection("registerDetails")
       .find(query)
-      .toArray((error, collection) => {
+      .toArray()
+      .then((collection) => {
         console.log(collection);
         if (collection.length === 0) {
           res.send(`User not registered`);
@@ -99,6 +93,7 @@ router.post("/login", middleware.authentication, (req, res) => {
           collection.forEach((user, index) => {
             // console.log(bcrypt.compareSync(password, user.Password));
             if (bcrypt.compareSync(password, user.Password)) {
+              
             }
           });
         }
