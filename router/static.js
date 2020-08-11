@@ -3,14 +3,17 @@ const assert = require("assert");
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const middleware = require("../middleware/token");
 const { json } = require("body-parser");
+const { Console } = require("console");
 
 // Mngo DB Connection URL
 const url = "mongodb://localhost:27017";
 
 const saltRounds = 10;
+const jwtPrivateKey = "shopItemsManagement";
 
 //////////////////////////////////////////Api for registration////////////////////////////////////
 router.post("/register", middleware.validation, (req, res) => {
@@ -20,88 +23,110 @@ router.post("/register", middleware.validation, (req, res) => {
   let model = req.body.model;
 
   //   console.log(encryptedPassword);
-  MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
-    if (error) {
-      throw error;
-    }
-    console.log("Connected successfully to server");
-    const dbName = db.db("customerDetails");
-    var query = { EmailOrPhone: emailOrPhone };
+  try {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
+      if (error) {
+        throw error;
+      }
+      console.log("Connected successfully to server");
+      const dbName = db.db("customerDetails");
+      var query = { EmailOrPhone: emailOrPhone };
 
-    dbName
-      .collection("registerDetails")
-      .find(query)
-      .toArray()
-      .then((collection) => {
-        // console.log(collection);
-        if (collection.length !== 0) {
-          res.send("email or phone already registered");
-          console.log("email or phone already registered");
-          db.close();
-        } else {
-          dbName
-            .collection(model)
-            .find({})
-            .toArray()
-            .then((items) => {
-              // console.log(items);
-              dbName
-                .collection("registerDetails")
-                .insertOne({
-                  Username: userName,
-                  EmailOrPhone: emailOrPhone,
-                  Model: model,
-                  Password: encryptedPassword,
-                  Items: items,
-                })
-                .then((collection) => {
-                  if (!collection.result.ok) {
-                    console.error("registration failed please try again");
-                    res.send("registration failed please try again");
-                  } else {
-                    console.log(collection.result);
-                    res.send("successfully registered");
-                  }
-                  db.close();
-                });
-            });
-        }
-      });
-  });
+      dbName
+        .collection("registerDetails")
+        .find(query)
+        .toArray()
+        .then((collection) => {
+          // console.log(collection);
+          if (collection.length !== 0) {
+            res.send("email or phone already registered");
+            console.log("email or phone already registered");
+            db.close();
+            return true;
+          } else {
+            dbName
+              .collection(model)
+              .find({})
+              .toArray()
+              .then((items) => {
+                // console.log(items);
+                dbName
+                  .collection("registerDetails")
+                  .insertOne({
+                    Username: userName,
+                    EmailOrPhone: emailOrPhone,
+                    Model: model,
+                    Password: encryptedPassword,
+                    Items: items,
+                  })
+                  .then((collection) => {
+                    if (!collection.result.ok) {
+                      console.error("registration failed please try again");
+                      res.send("registration failed please try again");
+                    } else {
+                      console.log(collection.result);
+                      res.send("successfully registered");
+                    }
+                    db.close();
+                    return true;
+                  })
+                  .catch((error) => {
+                    console.error(error);
+                  });
+              });
+          }
+        });
+    });
+  } catch (error) {
+    console.error("catched error while attempted to connect the db" + error);
+  }
 });
 
 /////////////////////////////*********Api for Login**************////////////////////////////////
-router.post("/login", middleware.authentication, (req, res) => {
+router.post("/login", (req, res) => {
   let userName = req.body.userName;
   let password = req.body.password;
-  MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
-    if (error) {
-      res.sendStatus(500).send("Server error")
-      db.close();
-    }
-    console.log("Connected successfully to server");
-    const dbName = db.db("customerDetails");
-    var query = { Username: userName };
-    dbName
-      .collection("registerDetails")
-      .find(query)
-      .toArray()
-      .then((collection) => {
-        // console.log(collection);
-        if (collection.length === 0) {
-          res.sendStatus(200).send(`User not registered Please sign up first`);
-        } else {
-          collection.forEach((element) => {
-            if (bcrypt.compareSync(password, element.Password)) {
-              res.sendStatus(200).json(element.Items);
-              console.log(element.Items);
-              break
-            }
-          });
-          db.close(); 
-        }
-      });
-  });
+  try {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
+      if (error) {
+        res.send("Server error");
+        return true;
+      }
+      console.log("Connected successfully to server");
+      const dbName = db.db("customerDetails");
+      var query = { Username: userName };
+      dbName
+        .collection("registerDetails")
+        .find(query)
+        .toArray()
+        .then((collection) => {
+          // console.log(collection);
+          if (collection.length === 0) {
+            res.send(`User not registered Please sign up first`);
+          } else {
+            collection.forEach((element) => {
+              if (bcrypt.compareSync(password, element.Password)) {
+                let jwtPublicKey = {
+                  Username: element.Username,
+                  Password: element.Password,
+                };
+                let token = jwt.sign(jwtPublicKey, jwtPrivateKey, {
+                  expiresIn: 43200,
+                });
+                res.send({ auth: true, Token: token });
+              }
+            });
+          }
+          db.close();
+          return true
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+  } catch (error) {
+    console.error("catched error while attempted to connect the db" + error);
+  }
 });
 
 router.get("/display", (req, res) => {
