@@ -30,7 +30,7 @@ router.post("/register", middleware.validation, (req, res) => {
       }
       console.log("Connected successfully to server");
       const dbName = db.db("customerDetails");
-      var query = { EmailOrPhone: emailOrPhone };
+      let query = { EmailOrPhone: emailOrPhone };
 
       dbName
         .collection("registerDetails")
@@ -94,7 +94,7 @@ router.post("/login", (req, res) => {
       }
       console.log("Connected successfully to server");
       const dbName = db.db("customerDetails");
-      var query = { Username: userName };
+      let query = { Username: userName };
       dbName
         .collection("registerDetails")
         .find(query)
@@ -118,7 +118,7 @@ router.post("/login", (req, res) => {
             });
           }
           db.close();
-          return true
+          return true;
         })
         .catch((error) => {
           console.error(error);
@@ -129,9 +129,38 @@ router.post("/login", (req, res) => {
   }
 });
 
-router.get("/display", (req, res) => {
-  res.json(modalData.data);
-  console.log(modalData.data);
+router.get("/display", middleware.authentication, (req, res) => {
+  console.log("user logged");
+  // console.log(res.locals);
+  try {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
+      if (error) {
+        throw error;
+      } else {
+        console.log("Connected successfully to server");
+        const dbName = db.db("customerDetails");
+        let query = {
+          Username: res.locals.Username,
+          Password: res.locals.Password,
+        };
+        dbName
+          .collection("registerDetails")
+          .find(query)
+          .toArray()
+          .then((collection) => {
+            // console.log(collection[0].Items);
+            res.json(collection[0].Items);
+            db.close();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+      return true;
+    });
+  } catch (error) {
+    console.error("catched error while attempted to connect the db" + error);
+  }
 });
 
 router.post("*", (req, res) => {

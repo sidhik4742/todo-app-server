@@ -5,7 +5,6 @@ const cors = require("cors");
 
 const port = process.env.PORT || 3001;
 
-const Token = require("./middleware/token");
 const router = require("./router/static");
 
 app.use(cors());
