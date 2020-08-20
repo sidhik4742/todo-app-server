@@ -15,7 +15,7 @@ const url = "mongodb://localhost:27017";
 const saltRounds = 10;
 const jwtPrivateKey = "shopItemsManagement";
 
-//////////////////////////////////////////Api for registration////////////////////////////////////
+//////////////////////////**********?Api for registration**********/////////////////////////////////
 router.post("/register", middleware.validation, (req, res) => {
   const encryptedPassword = bcrypt.hashSync(req.body.password, saltRounds);
   let userName = req.body.userName;
@@ -82,7 +82,7 @@ router.post("/register", middleware.validation, (req, res) => {
   }
 });
 
-/////////////////////////////*********Api for Login**************////////////////////////////////
+////////////////////////////**********?Api for Login**********////////////////////////////////////
 router.post("/login", (req, res) => {
   let userName = req.body.userName;
   let password = req.body.password;
@@ -100,9 +100,13 @@ router.post("/login", (req, res) => {
         .find(query)
         .toArray()
         .then((collection) => {
-          // console.log(collection);
+          console.log(collection.length);
           if (collection.length === 0) {
-            res.send(`User not registered Please sign up first`);
+            console.log("User not registered Please sign up first");
+            res.send({
+              auth: false,
+              message: `User not registered Please sign up first`,
+            });
           } else {
             collection.forEach((element) => {
               if (bcrypt.compareSync(password, element.Password)) {
@@ -128,6 +132,8 @@ router.post("/login", (req, res) => {
     console.error("catched error while attempted to connect the db" + error);
   }
 });
+
+//////////////////////////**********?Api for Adding Display Items**********/////////////////////////////////
 
 router.get("/display", middleware.authentication, (req, res) => {
   console.log("user logged");
@@ -157,6 +163,48 @@ router.get("/display", middleware.authentication, (req, res) => {
           });
       }
       return true;
+    });
+  } catch (error) {
+    console.error("catched error while attempted to connect the db" + error);
+  }
+});
+
+//////////////////////////**********?Api for Adding Item**********/////////////////////////////////
+
+router.put("/main/addItem", middleware.authentication, (req, res) => {
+  console.log(req.body);
+  let item = req.body;
+  try {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
+      if (error) {
+        throw error;
+      } else {
+        console.log("Connected successfully to server");
+        const dbName = db.db("customerDetails");
+        let query = {
+          Username: res.locals.Username,
+          Password: res.locals.Password,
+        };
+        dbName
+          .collection("registerDetails")
+          .findOneAndUpdate(query, { $push: { Items: item } }, { new: true })
+          .then((collection) => {
+            console.log(collection.value.Items);
+            res.send("Item added to your list");
+            db.close();
+          });
+        dbName
+          .collection("stationeryItems")
+          .insertOne(item)
+          .then((collection) => {
+            console.log(collection.ops);
+            db.close();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        return true;
+      }
     });
   } catch (error) {
     console.error("catched error while attempted to connect the db" + error);
