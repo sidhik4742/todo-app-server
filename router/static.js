@@ -172,37 +172,72 @@ router.get("/display", middleware.authentication, (req, res) => {
 //////////////////////////**********?Api for Adding Item**********/////////////////////////////////
 
 router.put("/main/addItem", middleware.authentication, (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   let item = req.body;
   try {
     MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
       if (error) {
         throw error;
       } else {
+        // let collectionName = "registerDetails";
+
         console.log("Connected successfully to server");
         const dbName = db.db("customerDetails");
-        let query = {
-          Username: res.locals.Username,
-          Password: res.locals.Password,
-        };
-        dbName
-          .collection("registerDetails")
-          .findOneAndUpdate(query, { $push: { Items: item } }, { new: true })
-          .then((collection) => {
-            console.log(collection.value.Items);
-            res.send("Item added to your list");
-            db.close();
-          });
-        dbName
-          .collection("stationeryItems")
-          .insertOne(item)
-          .then((collection) => {
-            console.log(collection.ops);
-            db.close();
+
+        async function getNextSequenceValue(productid) {
+          // console.log(productid);
+          let query = { _id: productid };
+          const collection = await dbName
+            .collection("stationeryItems")
+            .findOneAndUpdate(
+              query,
+              { $inc: { sequence_value: 1 } },
+              { new: true }
+            );
+          return await collection.value.sequence_value;
+
+          //*! alternate methord//////////////////////////////
+          // .then((collection) => {
+          //   console.log(collection.value.sequence_value);
+          //   return collection.value.sequence_value;
+          // })
+          // .catch((error) => {
+          //   console.log("error" + error);
+          // });
+        }
+        getNextSequenceValue("productid")
+          .then((id) => {
+            item._id = id;
+            console.log("Outside" + id);
+            dbName
+              .collection("stationeryItems")
+              .insertOne(item)
+              .then((collection) => {
+                // console.log(collection.ops);
+                let query = {
+                  Username: res.locals.Username,
+                  Password: res.locals.Password,
+                };
+                dbName
+                  .collection("registerDetails")
+                  .findOneAndUpdate(
+                    query,
+                    { $push: { Items: item } },
+                    { new: true }
+                  )
+                  .then((collection) => {
+                    console.log(collection.value.Items);
+                    res.send("Item added to your list");
+                    db.close();
+                  });
+              });
           })
           .catch((error) => {
             console.log(error);
           });
+
+        //
+
         return true;
       }
     });
