@@ -44,9 +44,12 @@ router.post("/register", middleware.validation, (req, res) => {
             db.close();
             return true;
           } else {
+            let query = {
+              currentStatus: false,
+            };
             dbName
               .collection(model)
-              .find({})
+              .find(query)
               .toArray()
               .then((items) => {
                 // console.log(items);
