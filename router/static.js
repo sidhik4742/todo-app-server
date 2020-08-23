@@ -175,7 +175,7 @@ router.get("/display", middleware.authentication, (req, res) => {
 //////////////////////////**********?Api for Adding Item**********/////////////////////////////////
 
 router.put("/main/addItem", middleware.authentication, (req, res) => {
-  // console.log(req.body);
+  console.log(req.body);
   let item = req.body;
   try {
     MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
@@ -191,7 +191,7 @@ router.put("/main/addItem", middleware.authentication, (req, res) => {
           // console.log(productid);
           let query = { _id: productid };
           const collection = await dbName
-            .collection("stationeryItems")
+            .collection(item.model)
             .findOneAndUpdate(
               query,
               { $inc: { sequence_value: 1 } },
@@ -213,7 +213,7 @@ router.put("/main/addItem", middleware.authentication, (req, res) => {
             item._id = id;
             console.log("Outside" + id);
             dbName
-              .collection("stationeryItems")
+              .collection(item.model)
               .insertOne(item)
               .then((collection) => {
                 // console.log(collection.ops);
