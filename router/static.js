@@ -83,6 +83,7 @@ router.post("/register", middleware.validation, (req, res) => {
 });
 
 /////////////////////////////*********Api for Login**************////////////////////////////////
+
 router.post("/login", (req, res) => {
   let userName = req.body.userName;
   let password = req.body.password;
@@ -114,10 +115,10 @@ router.post("/login", (req, res) => {
                   expiresIn: 43200,
                 });
                 res.send({ auth: true, Token: token });
+                db.close();
               }
             });
           }
-          db.close();
           return true;
         })
         .catch((error) => {
