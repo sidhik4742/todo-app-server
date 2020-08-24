@@ -12,15 +12,15 @@ const jwtPrivateKey = "shopItemsManagement";
 
 function authentication(req, res, next) {
   console.log("token validation");
-  // console.log(req.headers.authorization);
+  // console.log("Public Key: "+req.headers.authorization);
   let authorization = req.headers.authorization;
-  // let jwtPrivateKey = static.jwtPrivateKey;
+
   jwt.verify(authorization, jwtPrivateKey, function (error, decoded) {
     if (error) {
       res.status(401).send("user not authorized");
       return true;
     } else {
-      // console.log(decoded);
+      console.log("jwt decoded info: " + decoded);
       res.locals.Username = decoded.Username;
       res.locals.Password = decoded.Password;
       next();
