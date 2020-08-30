@@ -17,7 +17,8 @@ function authentication(req, res, next) {
 
   jwt.verify(authorization, jwtPrivateKey, function (error, decoded) {
     if (error) {
-      res.status(401).send("user not authorized");
+      console.log("authorization failed");
+      res.status(401).send("User authorization failed");
       return true;
     } else {
       console.log("jwt decoded info: " + decoded);

@@ -249,6 +249,78 @@ router.put("/main/addItem", middleware.authentication, (req, res) => {
   }
 });
 
+//////////////////////////**********?Api for Save list**********/////////////////////////////////
+
+router.put("/main/savelist", middleware.authentication, (req, res) => {
+  console.log(req.body);
+  let savedItem = req.body;
+  try {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
+      if (error) {
+        throw error;
+      } else {
+        // let collectionName = "registerDetails";
+        console.log("Connected successfully to server");
+        const dbName = db.db("customerDetails");
+        let query = {
+          Username: res.locals.Username,
+          Password: res.locals.Password,
+        };
+        dbName
+          .collection("registerDetails")
+          .findOneAndUpdate(
+            query,
+            { $push: { savedList: savedItem } },
+            { new: true }
+          )
+          .then((collection) => {
+            console.log(collection.value.Items);
+            res.send("Item added to your list");
+            db.close();
+          });
+      }
+    });
+  } catch (error) {
+    console.error("catched error while attempted to connect the db" + error);
+  }
+});
+
+//////////////////////////**********?Api for display Saved list**********/////////////////////////////////
+
+router.get("/main/display/savelist", middleware.authentication, (req, res) => {
+  console.log("user logged");
+  // console.log(res.locals);
+  try {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, db) => {
+      if (error) {
+        throw error;
+      } else {
+        console.log("Connected successfully to server");
+        const dbName = db.db("customerDetails");
+        let query = {
+          Username: res.locals.Username,
+          Password: res.locals.Password,
+        };
+        dbName
+          .collection("registerDetails")
+          .find(query)
+          .toArray()
+          .then((collection) => {
+            console.log(collection[0].savedList);
+            res.json(collection[0].savedList);
+            db.close();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+      return true;
+    });
+  } catch (error) {
+    console.error("catched error while attempted to connect the db" + error);
+  }
+});
+
 router.post("*", (req, res) => {
   res.send("No root available");
 });
