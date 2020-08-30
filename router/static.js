@@ -121,10 +121,10 @@ router.post("/login", (req, res) => {
                   expiresIn: 43200,
                 });
                 res.send({ auth: true, Token: token });
+                db.close();
               }
             });
           }
-          db.close();
           return true;
         })
         .catch((error) => {
